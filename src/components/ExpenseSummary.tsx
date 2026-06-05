@@ -1,10 +1,9 @@
-interface ExpenseSummaryProps {
-  total: number
-  currencySymbol: string
-}
+import { useContext } from 'react'
+import { AppContext } from '../context/AppContext'
 
-function ExpenseSummary({ total, currencySymbol }: ExpenseSummaryProps) {
-  // TODO: consume total and currencySymbol from context instead of props
+function ExpenseSummary() {
+  const { total, currencySymbol } = useContext(AppContext)!
+
   return (
     <div className="expense-summary">
       <span className="expense-summary-label">Total</span>

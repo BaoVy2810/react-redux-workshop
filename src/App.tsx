@@ -1,7 +1,8 @@
-import { useState, useEffect, useMemo, useCallback } from 'react'
+import { useState, useEffect, useMemo, useCallback, useContext } from 'react'
 import type { Expense } from './types/expense'
 import { STORAGE_KEY } from './constants'
 import { filterExpenses } from './utils/filterExpenses'
+import { AppProvider, AppContext } from './context/AppContext'
 import ExpenseForm from './components/ExpenseForm'
 import ExpenseList from './components/ExpenseList'
 import SearchBar from './components/SearchBar'
@@ -15,10 +16,6 @@ function App() {
   })
 
   const [query, setQuery] = useState('')
-
-  const [currency, setCurrency] = useState<'USD' | 'VND'>('USD')
-  const [theme, setTheme] = useState<'light' | 'dark'>('light')
-  const currencySymbol = currency === 'USD' ? '$' : '₫'
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(expenses))
@@ -45,27 +42,42 @@ function App() {
     ])
   }
 
-  // TODO: replace prop drilling with useContext
+  return (
+    <AppProvider total={total}>
+      <AppBody
+        query={query}
+        onQueryChange={setQuery}
+        filteredExpenses={filteredExpenses}
+        onDeleteExpense={handleDeleteExpense}
+        onAddExpense={handleAddExpense}
+      />
+    </AppProvider>
+  )
+}
+
+interface AppBodyProps {
+  query: string
+  onQueryChange: (query: string) => void
+  filteredExpenses: Expense[]
+  onDeleteExpense: (id: string) => void
+  onAddExpense: (expense: Omit<Expense, 'id'>) => void
+}
+
+function AppBody({ query, onQueryChange, filteredExpenses, onDeleteExpense, onAddExpense }: AppBodyProps) {
+  const { theme } = useContext(AppContext)!
+
   return (
     <div className="app-layout" data-theme={theme}>
       <aside>
         <h1>Expense Manager</h1>
-        <AppHeader
-          currency={currency}
-          theme={theme}
-          onCurrencyChange={setCurrency}
-          onThemeChange={setTheme}
-        />
-        <ExpenseForm onAddExpense={handleAddExpense} />
+        <AppHeader />
+        <ExpenseForm onAddExpense={onAddExpense} />
       </aside>
       <main>
-        <SearchBar query={query} onQueryChange={setQuery} />
+        <SearchBar query={query} onQueryChange={onQueryChange} />
         <ExpenseList
           expenses={filteredExpenses}
-          onDeleteExpense={handleDeleteExpense}
-          currencySymbol={currencySymbol}
-          total={total}
-          theme={theme}
+          onDeleteExpense={onDeleteExpense}
         />
       </main>
     </div>
